@@ -68,6 +68,7 @@ class DeepspeedStrategy(ABC):
         self.deepcompile = getattr(args, "deepcompile", False)
         self.ds_tensor_parallel_size = getattr(args, "ds_tensor_parallel_size", 1)
         self.ring_attn_size = getattr(self.args, "ring_attn_size", 1)
+        self.optimizer_type = getattr(self.args, "optimizer", "adamw")
 
         if self.ds_tensor_parallel_size > 1:
             assert deepspeed.version >= "0.16.4", "DeepSpeed version must be >= 0.16.4 for tensor parallel training"
@@ -134,10 +135,18 @@ class DeepspeedStrategy(ABC):
     def create_optimizer(self, model, **kwargs) -> Optimizer:
         if isinstance(model, Actor):
             model = model.model
-        # Optimizer
-        AdamOptimizer = DeepSpeedCPUAdam if self.adam_offload else FusedAdam
         optim_params = get_optimizer_grouped_parameters(model, kwargs["weight_decay"])
-        optim = AdamOptimizer(optim_params, **kwargs)
+
+        if self.optimizer_type == "paged_adamw_8bit":
+            import bitsandbytes as bnb
+
+            OptimizerClass = bnb.optim.PagedAdamW8bit
+        elif self.optimizer_type == "adamw_torch_4bit":
+            from torch.optim import adamw_torch_4bit as OptimizerClass
+        else:
+            OptimizerClass = DeepSpeedCPUAdam if self.adam_offload else FusedAdam
+
+        optim = OptimizerClass(optim_params, **kwargs)
         return optim
 
     def backward(self, loss: torch.Tensor, model: nn.Module, optimizer: optim.Optimizer, **kwargs) -> None:
@@ -263,6 +272,7 @@ class DeepspeedStrategy(ABC):
             use_ds_universal_ckpt=self.use_ds_universal_ckpt,
             deepcompile=self.deepcompile,
             tensor_parallel_size=self.ds_tensor_parallel_size,
+            allow_untested_optimizer=self.optimizer_type in {"paged_adamw_8bit", "adamw_torch_4bit"},
         )
 
         ds_config["train_micro_batch_size_per_gpu"] = self.micro_train_batch_size
