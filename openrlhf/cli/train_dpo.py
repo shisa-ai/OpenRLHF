@@ -199,6 +199,13 @@ if __name__ == "__main__":
     parser.add_argument("--lr_scheduler", type=str, default="cosine_with_min_lr")
     parser.add_argument("--zpg", type=int, default=1, help="ZeRO++ max partition size")
     parser.add_argument("--adam_offload", action="store_true", default=False, help="Offload Adam Optimizer")
+    parser.add_argument(
+        "--optimizer",
+        type=str,
+        default="adamw",
+        choices=["adamw", "paged_adamw_8bit", "adamw_torch_4bit"],
+        help="Optimizer type",
+    )
     parser.add_argument("--flash_attn", action="store_true", default=False, help="Enable FlashAttention2")
     parser.add_argument("--use_liger_kernel", action="store_true", default=False, help="Enable Liger Kernel")
     parser.add_argument("--grad_accum_dtype", type=str, default=None, help="Adam grad accum data type")
