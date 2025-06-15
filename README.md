@@ -74,7 +74,7 @@ More details are in [Slides](https://docs.google.com/presentation/d/1JRhB1d7csof
 - Support for [Knowledge Distillation](./examples/scripts/train_knowledge_distillation.sh) ([Microsoft: minillm](https://github.com/microsoft/LMOps/tree/main/minillm)).  
 - Integration of [Process Reward Model (PRM)](./examples/scripts/train_prm_mistral.sh).  
 - Packing of training samples for SFT, DPO, RM, PRM, and PPO (`--packing_samples`).  
-- Support for [Mixture of Experts (MoE)](./examples/test_scripts/train_sft_mixtral_lora.sh) (`--aux_loss_coef`).  
+- Support for [Mixture of Experts (MoE)](./examples/test_scripts/train_sft_mixtral_lora.sh) (`--aux_loss_coef`, `--zero_stage 2moe`).
 - Integration of FlashAttention2 (`--flash_attn`).  
 - Support for QLoRA (`--load_in_4bit`) and [LoRA](./examples/scripts/train_sft_mixtral_lora.sh) (`--lora_rank`, `--target_modules`).  
 - Compatibility with HuggingFace's `tokenizer.apply_chat_template` for datasets (`--apply_chat_template` and `--input_key`).  

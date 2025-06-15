@@ -14,6 +14,7 @@ def get_train_ds_config(
     deepcompile=False,
     tensor_parallel_size=1,
     allow_untested_optimizer=False,
+    moe=False,
 ):
     device = "cpu" if offload else "none"
     zero_opt_dict = {
@@ -62,6 +63,19 @@ def get_train_ds_config(
     }
     if allow_untested_optimizer and stage >= 2:
         config["zero_allow_untested_optimizer"] = True
+
+    if moe:
+        config["moe"] = {
+            "enabled": True,
+            "num_experts": 128,
+            "top_k": 8,
+            "expert_parallel_size": 2,
+            "use_tutel": True,
+            "capacity_factor": 1.0,
+            "moe_param_group": True,
+            "noisy_gate_policy": "Jitter",
+        }
+
     return config
 
 

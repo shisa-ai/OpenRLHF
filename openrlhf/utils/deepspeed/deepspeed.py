@@ -60,6 +60,8 @@ class DeepspeedStrategy(ABC):
         self.full_determinism = full_determinism
         self.max_norm = max_norm
 
+        self.moe = getattr(args, "moe", False)
+
         self.adam_offload = getattr(args, "adam_offload", False)
         self.zpg = getattr(args, "zpg", 1)
         self.use_ds_universal_ckpt = getattr(args, "use_ds_universal_ckpt", False)
@@ -273,6 +275,7 @@ class DeepspeedStrategy(ABC):
             deepcompile=self.deepcompile,
             tensor_parallel_size=self.ds_tensor_parallel_size,
             allow_untested_optimizer=self.optimizer_type in {"paged_adamw_8bit", "adamw_torch_4bit"},
+            moe=self.moe,
         )
 
         ds_config["train_micro_batch_size_per_gpu"] = self.micro_train_batch_size
