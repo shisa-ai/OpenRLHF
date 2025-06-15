@@ -5,8 +5,23 @@ import torch.nn.functional as F
 from transformers import AutoTokenizer
 
 
+def _parse_zero_stage(zero_stage):
+    moe = False
+    if isinstance(zero_stage, str):
+        if zero_stage.lower() == "2moe":
+            moe = True
+            zero_stage = 2
+        else:
+            zero_stage = int(zero_stage)
+    return zero_stage, moe
+
+
 def get_strategy(args):
     from openrlhf.utils.deepspeed import DeepspeedStrategy
+
+    zero_stage, moe = _parse_zero_stage(args.zero_stage)
+    args.zero_stage = zero_stage
+    args.moe = moe
 
     strategy = DeepspeedStrategy(
         seed=getattr(args, "seed", 42),
@@ -14,7 +29,7 @@ def get_strategy(args):
         max_norm=getattr(args, "max_norm", 1.0),
         micro_train_batch_size=getattr(args, "micro_train_batch_size", 1),
         train_batch_size=getattr(args, "train_batch_size", 128),
-        zero_stage=args.zero_stage,
+        zero_stage=zero_stage,
         bf16=getattr(args, "bf16", True),
         args=args,
     )
