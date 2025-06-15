@@ -441,6 +441,7 @@ python -m openrlhf.cli.lora_combiner \
 - `--colocate_critic_reward`、`--colocate_actor_ref` オプションを有効にしてノードを統合します。
 - `rollout_micro_batch_size` を可能な限り増やし（vLLMエンジンのTPサイズを最小化）、トレーニングフェーズでは `--micro_train_batch_size` を大きくし、`--packing_samples` を有効にしてください。
 - GPUメモリが十分にある場合は、`--adam_offload` を無効にし、`--overlap_comm` を有効にしてください。また、`--deepcompile` を有効にしてトレーニングを高速化してください。
+- メモリ効率の高いオプティマイザを使用するには `--optimizer paged_adamw_8bit` または `--optimizer adamw_torch_4bit` を指定します。
 - vLLMには `--vllm_sync_backend nccl` を使用してください。
 - `n_samples_per_prompts` > 1 の場合は、vLLM生成で [enable_prefix_caching](https://docs.vllm.ai/en/stable/automatic_prefix_caching/apc.html) を有効にしてください。
 - 大規模なベースモデルの場合、OOMが発生した場合は、`--colocate_xxxx` オプションを使用しないでください。
