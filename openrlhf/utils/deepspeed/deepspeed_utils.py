@@ -13,6 +13,7 @@ def get_train_ds_config(
     use_ds_universal_ckpt=False,
     deepcompile=False,
     tensor_parallel_size=1,
+    allow_untested_optimizer=False,
     moe=False,
 ):
     device = "cpu" if offload else "none"
@@ -40,7 +41,7 @@ def get_train_ds_config(
     if stage == 3:
         zero_opt_dict["reduce_scatter"] = True
 
-    ds_config = {
+    config = {
         "steps_per_print": 100,
         "zero_optimization": zero_opt_dict,
         "bf16": {
@@ -60,9 +61,11 @@ def get_train_ds_config(
             "autotp_size": tensor_parallel_size,
         },
     }
+    if allow_untested_optimizer and stage >= 2:
+        config["zero_allow_untested_optimizer"] = True
 
     if moe:
-        ds_config["moe"] = {
+        config["moe"] = {
             "enabled": True,
             "num_experts": 128,
             "top_k": 8,
@@ -73,7 +76,7 @@ def get_train_ds_config(
             "noisy_gate_policy": "Jitter",
         }
 
-    return ds_config
+    return config
 
 
 def get_eval_ds_config(
