@@ -140,11 +140,11 @@ class DeepspeedStrategy(ABC):
         optim_params = get_optimizer_grouped_parameters(model, kwargs["weight_decay"])
 
         if self.optimizer_type == "paged_adamw_8bit":
-            import bitsandbytes as bnb
-
-            OptimizerClass = bnb.optim.PagedAdamW8bit
+            from torchao.optim import AdamW8bit
+            OptimizerClass = AdamW8bit
         elif self.optimizer_type == "adamw_torch_4bit":
-            from torch.optim import adamw_torch_4bit as OptimizerClass
+            from torchao.optim import AdamW8bit
+            OptimizerClass = AdamW4bit
         else:
             OptimizerClass = DeepSpeedCPUAdam if self.adam_offload else FusedAdam
 
