@@ -143,7 +143,7 @@ class DeepspeedStrategy(ABC):
             from torchao.optim import AdamW8bit
             OptimizerClass = AdamW8bit
         elif self.optimizer_type == "adamw_torch_4bit":
-            from torchao.optim import AdamW8bit
+            from torchao.optim import AdamW4bit
             OptimizerClass = AdamW4bit
         else:
             OptimizerClass = DeepSpeedCPUAdam if self.adam_offload else FusedAdam
