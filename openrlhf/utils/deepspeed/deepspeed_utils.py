@@ -69,7 +69,7 @@ def get_train_ds_config(
             "enabled": True,
             "num_experts": 128,
             "top_k": 8,
-            "expert_parallel_size": 2,
+            "expert_parallel_size": 4,
             "use_tutel": True,
             "capacity_factor": 1.0,
             "moe_param_group": True,
