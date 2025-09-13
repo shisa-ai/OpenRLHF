@@ -162,7 +162,7 @@ if __name__ == "__main__":
         "--optimizer",
         type=str,
         default="adamw",
-        choices=["adamw", "paged_adamw_8bit", "adamw_torch_4bit"],
+        choices=["adamw", "adamw_torchao_8bit", "adamw_torchao_4bit", "muon", "muon_aux_adam"],
         help="Optimizer type",
     )
     parser.add_argument(

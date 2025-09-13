@@ -138,15 +138,34 @@ class DeepspeedStrategy(ABC):
     def create_optimizer(self, model, **kwargs) -> Optimizer:
         if isinstance(model, Actor):
             model = model.model
-        optim_params = get_optimizer_grouped_parameters(model, kwargs["weight_decay"])
-
-        if self.optimizer_type == "paged_adamw_8bit":
+        
+        if self.optimizer_type == "adamw_torchao_8bit":
             from torchao.optim import AdamW8bit
+            optim_params = get_optimizer_grouped_parameters(model, kwargs["weight_decay"])
             OptimizerClass = AdamW8bit
-        elif self.optimizer_type == "adamw_torch_4bit":
+        elif self.optimizer_type == "adamw_torchao_4bit":
             from torchao.optim import AdamW4bit
+            optim_params = get_optimizer_grouped_parameters(model, kwargs["weight_decay"])
             OptimizerClass = AdamW4bit
+        elif self.optimizer_type == "muon":
+            from muon import Muon
+            # Muon uses matrix parameters (hidden weights) only
+            hidden_weights = [p for p in model.parameters() if p.ndim >= 2 and p.requires_grad]
+            optim_params = [{"params": hidden_weights}]
+            OptimizerClass = Muon
+        elif self.optimizer_type == "muon_aux_adam":
+            from muon import MuonWithAuxAdam
+            # Separate hidden weights from other parameters for MuonWithAuxAdam
+            hidden_weights = [p for p in model.parameters() if p.ndim >= 2 and p.requires_grad]
+            other_params = [p for p in model.parameters() if p.ndim < 2 and p.requires_grad]
+            
+            optim_params = [
+                {"params": hidden_weights, "use_muon": True},
+                {"params": other_params, "use_muon": False, "betas": (0.9, 0.95)}
+            ]
+            OptimizerClass = MuonWithAuxAdam
         else:
+            optim_params = get_optimizer_grouped_parameters(model, kwargs["weight_decay"])
             OptimizerClass = DeepSpeedCPUAdam if self.adam_offload else FusedAdam
 
         optim = OptimizerClass(optim_params, **kwargs)
@@ -275,7 +294,7 @@ class DeepspeedStrategy(ABC):
             use_ds_universal_ckpt=self.use_ds_universal_ckpt,
             deepcompile=self.deepcompile,
             tensor_parallel_size=self.ds_tensor_parallel_size,
-            allow_untested_optimizer=self.optimizer_type in {"paged_adamw_8bit", "adamw_torch_4bit"},
+            allow_untested_optimizer=self.optimizer_type in {"adamw_torchao_8bit", "adamw_torchao_4bit", "muon", "muon_aux_adam"},
             moe=self.moe,
         )
         if self.use_dynamic_batch:
