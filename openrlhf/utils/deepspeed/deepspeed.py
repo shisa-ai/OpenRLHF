@@ -148,13 +148,25 @@ class DeepspeedStrategy(ABC):
             optim_params = get_optimizer_grouped_parameters(model, kwargs["weight_decay"])
             OptimizerClass = AdamW4bit
         elif self.optimizer_type == "muon":
-            from muon import Muon
+            try:
+                from muon import Muon
+            except ImportError:
+                raise ImportError(
+                    "Muon optimizer not found. Install with: pip install -e '.[muon]' "
+                    "or pip install git+https://github.com/KellerJordan/Muon.git"
+                )
             # Muon uses matrix parameters (hidden weights) only
             hidden_weights = [p for p in model.parameters() if p.ndim >= 2 and p.requires_grad]
             optim_params = [{"params": hidden_weights}]
             OptimizerClass = Muon
         elif self.optimizer_type == "muon_aux_adam":
-            from muon import MuonWithAuxAdam
+            try:
+                from muon import MuonWithAuxAdam
+            except ImportError:
+                raise ImportError(
+                    "Muon optimizer not found. Install with: pip install -e '.[muon]' "
+                    "or pip install git+https://github.com/KellerJordan/Muon.git"
+                )
             # Separate hidden weights from other parameters for MuonWithAuxAdam
             hidden_weights = [p for p in model.parameters() if p.ndim >= 2 and p.requires_grad]
             other_params = [p for p in model.parameters() if p.ndim < 2 and p.requires_grad]

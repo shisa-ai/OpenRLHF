@@ -24,4 +24,3 @@ transformers==4.56
 transformers_stream_generator
 wandb
 wheel
-git+https://github.com/KellerJordan/Muon.git
