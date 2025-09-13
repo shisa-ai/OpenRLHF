@@ -21,7 +21,7 @@ def train(args):
     # load huggingface model
     model = Actor(
         args.pretrain,
-        use_flash_attention_2=args.flash_attn,
+        attn_implementation=args.attn_implementation,
         bf16=args.bf16,
         load_in_4bit=args.load_in_4bit,
         lora_rank=args.lora_rank,
@@ -35,7 +35,7 @@ def train(args):
     # load teacher model for inference
     teacher_model = Actor(
         args.teacher_model,
-        use_flash_attention_2=args.flash_attn,
+        attn_implementation=args.attn_implementation,
         bf16=args.bf16,
         load_in_4bit=args.load_in_4bit,
         ds_config=strategy.get_ds_eval_config(offload=args.teacher_offload),
@@ -191,13 +191,19 @@ if __name__ == "__main__":
         choices=["adamw", "paged_adamw_8bit", "adamw_torch_4bit"],
         help="Optimizer type",
     )
-    parser.add_argument("--flash_attn", action="store_true", default=False, help="Enable FlashAttention2")
+    parser.add_argument(
+        "--attn_implementation",
+        type=str,
+        default="flash_attention_2",
+        help="Attention implementation (e.g., eager, flash_attention_2, flash_attention_3, kernels-community/vllm-flash-attn3)",
+    )
     parser.add_argument("--use_liger_kernel", action="store_true", default=False, help="Enable Liger Kernel")
     parser.add_argument("--aux_loss_coef", type=float, default=0, help="MoE balancing loss")
     parser.add_argument("--grad_accum_dtype", type=str, default=None, help="Adam grad accum data type")
     parser.add_argument("--overlap_comm", action="store_true", default=False)
     parser.add_argument("--gradient_checkpointing_use_reentrant", action="store_true", default=False)
     parser.add_argument("--disable_fast_tokenizer", action="store_true", default=False)
+    parser.add_argument("--ds_tensor_parallel_size", type=int, default=1, help="DeepSpeed Tensor parallel size")
 
     # LoRA
     parser.add_argument("--load_in_4bit", action="store_true", default=False)

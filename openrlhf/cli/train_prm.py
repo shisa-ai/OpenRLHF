@@ -21,7 +21,7 @@ def train(args):
     # load huggingface model
     model = Actor(
         args.pretrain,
-        use_flash_attention_2=args.flash_attn,
+        attn_implementation=args.attn_implementation,
         bf16=args.bf16,
         load_in_4bit=args.load_in_4bit,
         lora_rank=args.lora_rank,
@@ -165,12 +165,18 @@ if __name__ == "__main__":
         choices=["adamw", "paged_adamw_8bit", "adamw_torch_4bit"],
         help="Optimizer type",
     )
-    parser.add_argument("--flash_attn", action="store_true", default=False, help="Enable FlashAttention2")
+    parser.add_argument(
+        "--attn_implementation",
+        type=str,
+        default="flash_attention_2",
+        help="Attention implementation (e.g., eager, flash_attention_2, flash_attention_3, kernels-community/vllm-flash-attn3)",
+    )
     parser.add_argument("--use_liger_kernel", action="store_true", default=False, help="Enable Liger Kernel")
     parser.add_argument("--grad_accum_dtype", type=str, default=None, help="Adam grad accum data type")
     parser.add_argument("--overlap_comm", action="store_true", default=False)
     parser.add_argument("--gradient_checkpointing_use_reentrant", action="store_true", default=False)
     parser.add_argument("--disable_fast_tokenizer", action="store_true", default=False)
+    parser.add_argument("--ds_tensor_parallel_size", type=int, default=1, help="DeepSpeed Tensor parallel size")
 
     # LoRA
     parser.add_argument("--load_in_4bit", action="store_true", default=False)
@@ -185,9 +191,9 @@ if __name__ == "__main__":
     parser.add_argument("--aux_loss_coef", type=float, default=0, help="MoE balancing loss")
     parser.add_argument("--learning_rate", type=float, default=1e-6)
     parser.add_argument("--lr_warmup_ratio", type=float, default=0.03)
+    parser.add_argument("--lr_scheduler", type=str, default="cosine_with_min_lr")
     parser.add_argument("--micro_train_batch_size", type=int, default=1)
     parser.add_argument("--train_batch_size", type=int, default=128, help="Global training batch size")
-    parser.add_argument("--lr_scheduler", type=str, default="cosine_with_min_lr")
     parser.add_argument("--l2", type=float, default=0.0, help="weight decay loss")
     parser.add_argument("--adam_betas", type=float, nargs=2, default=(0.9, 0.95), help="Betas for Adam optimizer")
     parser.add_argument("--placeholder_token", type=str, default=None)
@@ -218,6 +224,9 @@ if __name__ == "__main__":
         type=str,
         default="prm_%s" % datetime.now().strftime("%m%dT%H:%M"),
     )
+
+    # TensorBoard parameters
+    parser.add_argument("--use_tensorboard", type=str, default=None, help="TensorBoard logging path")
 
     # ModelScope parameters
     parser.add_argument("--use_ms", action="store_true", default=False)
