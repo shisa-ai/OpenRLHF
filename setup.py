@@ -78,7 +78,7 @@ setup(
         "vllm_latest": ["vllm>0.10.1.1"],
         "ring": ["ring_flash_attn"],
         "liger": ["liger_kernel"],
-        "muon": ["muon @ git+https://github.com/KellerJordan/Muon.git"],
+        "muon": ["muon-optimizer @ git+https://github.com/KellerJordan/Muon.git"],
     },
     python_requires=">=3.10",
     classifiers=[

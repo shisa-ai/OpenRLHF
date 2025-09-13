@@ -153,7 +153,7 @@ class DeepspeedStrategy(ABC):
             except ImportError:
                 raise ImportError(
                     "Muon optimizer not found. Install with: pip install -e '.[muon]' "
-                    "or pip install git+https://github.com/KellerJordan/Muon.git"
+                    "or pip install muon-optimizer"
                 )
             # Muon uses matrix parameters (hidden weights) only
             hidden_weights = [p for p in model.parameters() if p.ndim >= 2 and p.requires_grad]
@@ -165,7 +165,7 @@ class DeepspeedStrategy(ABC):
             except ImportError:
                 raise ImportError(
                     "Muon optimizer not found. Install with: pip install -e '.[muon]' "
-                    "or pip install git+https://github.com/KellerJordan/Muon.git"
+                    "or pip install muon-optimizer"
                 )
             # Separate hidden weights from other parameters for MuonWithAuxAdam
             hidden_weights = [p for p in model.parameters() if p.ndim >= 2 and p.requires_grad]
