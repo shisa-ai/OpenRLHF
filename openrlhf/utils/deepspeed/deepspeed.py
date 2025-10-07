@@ -138,13 +138,41 @@ class DeepspeedStrategy(ABC):
     def create_optimizer(self, model, **kwargs) -> Optimizer:
         if isinstance(model, Actor):
             model = model.model
-        
-        if self.optimizer_type == "adamw_torchao_8bit":
-            from torchao.optim import AdamW8bit
+
+        if self.optimizer_type == "adamw_bnb_8bit":
+            try:
+                import bitsandbytes as bnb
+            except ImportError:
+                raise ImportError(
+                    "bitsandbytes not found. Install with: pip install bitsandbytes"
+                )
+            optim_params = get_optimizer_grouped_parameters(model, kwargs["weight_decay"])
+            OptimizerClass = bnb.optim.AdamW8bit
+        elif self.optimizer_type == "adamw_bnb_paged_8bit":
+            try:
+                import bitsandbytes as bnb
+            except ImportError:
+                raise ImportError(
+                    "bitsandbytes not found. Install with: pip install bitsandbytes"
+                )
+            optim_params = get_optimizer_grouped_parameters(model, kwargs["weight_decay"])
+            OptimizerClass = bnb.optim.PagedAdamW8bit
+        elif self.optimizer_type == "adamw_torchao_8bit":
+            try:
+                from torchao.optim import AdamW8bit
+            except ImportError:
+                raise ImportError(
+                    "torchao not found. Install with: pip install torchao"
+                )
             optim_params = get_optimizer_grouped_parameters(model, kwargs["weight_decay"])
             OptimizerClass = AdamW8bit
         elif self.optimizer_type == "adamw_torchao_4bit":
-            from torchao.optim import AdamW4bit
+            try:
+                from torchao.optim import AdamW4bit
+            except ImportError:
+                raise ImportError(
+                    "torchao not found. Install with: pip install torchao"
+                )
             optim_params = get_optimizer_grouped_parameters(model, kwargs["weight_decay"])
             OptimizerClass = AdamW4bit
         elif self.optimizer_type == "muon":
@@ -306,7 +334,7 @@ class DeepspeedStrategy(ABC):
             use_ds_universal_ckpt=self.use_ds_universal_ckpt,
             deepcompile=self.deepcompile,
             tensor_parallel_size=self.ds_tensor_parallel_size,
-            allow_untested_optimizer=self.optimizer_type in {"adamw_torchao_8bit", "adamw_torchao_4bit", "muon", "muon_aux_adam"},
+            allow_untested_optimizer=self.optimizer_type in {"adamw_bnb_8bit", "adamw_bnb_paged_8bit", "adamw_torchao_8bit", "adamw_torchao_4bit", "muon", "muon_aux_adam"},
             moe=self.moe,
         )
         if self.use_dynamic_batch:
